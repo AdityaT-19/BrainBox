@@ -51,9 +51,10 @@ class ProjectList extends StatelessWidget {
                 ),
                 child: Card(
                   child: ListTile(
-                    title: Text(_projectListController.projects[index].name),
-                    subtitle: Text(
-                        _projectListController.projects[index].description),
+                    title:
+                        Text(_projectListController.projects[index].name.value),
+                    subtitle: Text(_projectListController
+                        .projects[index].description.value),
                     onTap: () async {
                       final project = _projectListController.projects[index];
                       Future<List<String>> _buildGroupMembers() async {

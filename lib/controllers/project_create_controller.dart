@@ -11,16 +11,20 @@ class ProjectCreateFormController extends GetxController {
   RxnString projectName = RxnString();
   RxBool isUploaded = false.obs;
   RxnString projectDescription = RxnString();
-  RxList<String> projectFeatures = <String>[].obs;
-  RxList<String> projectTechnologies = <String>[].obs;
+  RxList<String> projectFeatures = <String>[
+    '',
+  ].obs;
+  RxList<String> projectTechnologies = <String>[
+    '',
+  ].obs;
   RxList<String> projectImageLinks = <String>[].obs;
   RxList<XFile> projectImages = <XFile>[].obs;
   RxnString projectGithubLink = RxnString();
   RxnString projectGroupId = RxnString();
   Rx<ProjectStatus> projectStatus = ProjectStatus.proposed.obs;
-  RxInt projectTechLen = 1.obs;
-  RxInt projectFeatureLen = 1.obs;
-  RxInt projectImageLen = 1.obs;
+  // RxInt projectTechLen = 1.obs;
+  // RxInt projectFeatureLen = 1.obs;
+  // RxInt projectImageLen = 1.obs;
   final formKey = GlobalKey<FormState>();
   Rxn<File> projectReportingFile = Rxn<File>();
   Rxn<String> projectReportingFileLink = Rxn<String>();
@@ -29,21 +33,21 @@ class ProjectCreateFormController extends GetxController {
 
   final supabase = Supabase.instance.client;
 
-  void addFeature(String? feature) {
-    projectFeatures.add(feature!);
+  void addFeature(String? feature, int index) {
+    projectFeatures[index] = feature!;
   }
 
-  void removeFeature(String? feature) {
-    projectFeatures.remove(feature!);
+  // void removeFeature(String? feature,int index) {
+  //   projectFeatures.remove(feature!);
+  // }
+
+  void addTechnology(String? technology, int index) {
+    projectTechnologies[index] = technology!;
   }
 
-  void addTechnology(String? technology) {
-    projectTechnologies.add(technology!);
-  }
-
-  void removeTechnology(String? technology) {
-    projectTechnologies.remove(technology!);
-  }
+  // void removeTechnology(String? technology,int index) {
+  //   projectTechnologies.remove(technology!);
+  // }
 
   String? validateName(String? value) {
     if ((GetUtils.isNullOrBlank(value) ?? false)) {
@@ -125,31 +129,31 @@ class ProjectCreateFormController extends GetxController {
     projectGithubLink.value = value!;
   }
 
-  addFeatureField() {
-    projectTechLen.value++;
-  }
+  // addFeatureField() {
+  //   projectTechLen.value++;
+  // }
 
-  removeFeatureField() {
-    if (projectTechLen.value > 1) {
-      projectTechLen.value--;
-    }
-  }
+  // removeFeatureField() {
+  //   if (projectTechLen.value > 1) {
+  //     projectTechLen.value--;
+  //   }
+  // }
 
-  addTechnologyField() {
-    projectFeatureLen.value++;
-  }
+  // addTechnologyField() {
+  //   projectFeatureLen.value++;
+  // }
 
-  removeTechnologyField() {
-    if (projectFeatureLen.value > 1) {
-      projectFeatureLen.value--;
-    }
-  }
+  // removeTechnologyField() {
+  //   if (projectFeatureLen.value > 1) {
+  //     projectFeatureLen.value--;
+  //   }
+  // }
 
-  removeImageField() {
-    if (projectImageLen > 1) {
-      projectImageLen.value--;
-    }
-  }
+  // removeImageField() {
+  //   if (projectImageLen > 1) {
+  //     projectImageLen.value--;
+  //   }
+  // }
 
   void saveImages(List<XFile> images) {
     projectImages.addAll(images);
@@ -160,55 +164,81 @@ class ProjectCreateFormController extends GetxController {
       formKey.currentState!.save();
       if (validateFeatures() && validateTechnologies() && validateGroupId()) {
         isUploading.value = true;
+
+        Get.snackbar('Upload Started - project', 'Please wait...',
+            snackPosition: SnackPosition.BOTTOM);
+
+        final response = await supabase
+            .from('project')
+            .insert(
+              {
+                'name': projectName.value,
+                'description': projectDescription.value,
+                'features': projectFeatures.toList(),
+                'technologies': projectTechnologies.toList(),
+                'githubLink': projectGithubLink.value,
+                'status': projectStatus.value.name.toString(),
+                'imageLinks': <String>[].toList(),
+                'gid': projectGroupId.value,
+              },
+            )
+            .select()
+            .single();
+
+        final pid = response['pid'] as String;
+
         Get.snackbar('Upload Started - images', 'Please wait...',
             snackPosition: SnackPosition.BOTTOM);
-        for (var i = 0; i < projectImages.length; i++) {
-          final fileName =
-              '${projectName.value!.removeAllWhitespace}/${(i + 1).toString()}';
-          final file = File(projectImages[i].path);
-          await supabase.storage
-              .from('projectImages')
-              .upload('$fileName${p.extension(file.path)}', file);
-          final url = supabase.storage
-              .from('projectImages')
-              .getPublicUrl('$fileName${p.extension(file.path)}');
-          projectImageLinks.add(url);
-        }
+
+        await Future.forEach(
+          projectImages,
+          (element) async {
+            final file = File(element.path);
+            final extension = p.extension(file.path);
+            final fileName =
+                '$pid/${(projectImages.indexOf(element) + 1)}$extension';
+            await supabase.storage.from('projectImages').upload(
+                  fileName,
+                  file,
+                );
+            final url = supabase.storage.from('projectImages').getPublicUrl(
+                  fileName,
+                );
+            projectImageLinks.add(url);
+          },
+        );
 
         Get.snackbar('Upload Started - report', 'Please wait...',
             snackPosition: SnackPosition.BOTTOM);
 
         if (projectReportingFile.value != null) {
-          final fileName = '${projectName.value!.removeAllWhitespace}/report';
+          final fileName = '$pid/report.pdf';
           await supabase.storage.from('projectReports').upload(
-              '$fileName${p.extension(projectReportingFile.value!.path)}',
-              projectReportingFile.value!);
+                fileName,
+                projectReportingFile.value!,
+              );
           final url = supabase.storage.from('projectReports').getPublicUrl(
-              '$fileName${p.extension(projectReportingFile.value!.path)}');
+                fileName,
+              );
           projectReportingFileLink.value = url;
         }
 
-        Get.snackbar('Upload Started - project', 'Please wait...',
-            snackPosition: SnackPosition.BOTTOM);
-
-        final response = await supabase.from('project').insert(
-          {
-            'name': projectName.value,
-            'description': projectDescription.value,
-            'features': projectFeatures.toList(),
-            'technologies': projectTechnologies.toList(),
-            'imageLinks': projectImageLinks.toList(),
-            'githubLink': projectGithubLink.value,
-            'status': projectStatus.value.name.toString(),
-            'gid': projectGroupId.value,
-            'reportLink': projectReportingFileLink.value,
-          },
-          defaultToNull: false,
-        ).select();
+        final project = await supabase
+            .from('project')
+            .update(
+              {
+                'imageLinks': projectImageLinks.toList(),
+                'reportLink': projectReportingFileLink.value
+              },
+            )
+            .eq('pid', pid)
+            .select()
+            .select();
 
         Get.snackbar('Project Created', 'Project has been created',
             snackPosition: SnackPosition.BOTTOM);
-        print(response);
+
+        print(project);
         isUploading.value = false;
         isUploaded.value = true;
       }

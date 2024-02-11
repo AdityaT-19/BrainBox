@@ -1,3 +1,4 @@
+import 'package:brainbox/controllers/project_update_controller.dart';
 import 'package:brainbox/models/project.dart';
 import 'package:brainbox/routes/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -7,15 +8,15 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProjectInfo extends StatelessWidget {
-  const ProjectInfo({Key? key, required this.project, required this.names})
+  ProjectInfo({Key? key, required this.project, required this.names})
       : super(key: key);
   final Project project;
   final List<String> names;
 
   Widget _buildGithubLink() {
-    if (project.githubLink != null && project.githubLink!.isNotEmpty) {
+    if (!GetUtils.isNullOrBlank(project.githubLink.value)!) {
       return SelectableLinkify(
-        text: project.githubLink!,
+        text: project.githubLink.value!,
         onOpen: (link) async {
           try {
             if (await canLaunchUrl(Uri.parse(link.url))) {
@@ -105,11 +106,13 @@ class ProjectInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          project.name,
-          style: Get.textTheme.titleLarge!.copyWith(
-            color: Get.theme.colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
+        title: Obx(
+          () => Text(
+            project.name.value,
+            style: Get.textTheme.titleLarge!.copyWith(
+              color: Get.theme.colorScheme.onPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         backgroundColor: Get.theme.colorScheme.primary,
@@ -119,7 +122,11 @@ class ProjectInfo extends StatelessWidget {
           children: [
             ListTile(
               title: _customHeading('Name'),
-              subtitle: _customBody(project.name),
+              subtitle: Obx(
+                () => _customBody(
+                  project.name.value,
+                ),
+              ),
             ),
             Container(
               padding: EdgeInsets.all(
@@ -155,12 +162,14 @@ class ProjectInfo extends StatelessWidget {
                           ),
                           borderRadius: BorderRadius.circular(50),
                         ),
-                        child: Text(
-                          project.status.value.name,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Get.theme.colorScheme.inverseSurface,
-                            fontWeight: FontWeight.bold,
+                        child: Obx(
+                          () => Text(
+                            project.status.value.name,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Get.theme.colorScheme.inverseSurface,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -171,11 +180,15 @@ class ProjectInfo extends StatelessWidget {
             ),
             ListTile(
               title: _customHeading('Description'),
-              subtitle: _customBody(project.description),
+              subtitle: Obx(
+                () => _customBody(
+                  project.description.value,
+                ),
+              ),
             ),
             ListTile(
               title: _customHeading('Github Link'),
-              subtitle: _buildGithubLink(),
+              subtitle: Obx(() => _buildGithubLink()),
             ),
             ListTile(
                 title: _customHeading('Group Members'),
@@ -195,8 +208,9 @@ class ProjectInfo extends StatelessWidget {
                   },
                 )),
             ListTile(
-                title: _customHeading('Features'),
-                subtitle: ListView.builder(
+              title: _customHeading('Features'),
+              subtitle: Obx(
+                () => ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: project.features.length,
@@ -210,53 +224,84 @@ class ProjectInfo extends StatelessWidget {
                       ),
                     );
                   },
-                )),
-            ListTile(
-              title: _customHeading('Technologies Used'),
-              subtitle: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: project.technologies.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: _customIndex(
-                      index + 1,
-                    ),
-                    subtitle: _customBody(
-                      project.technologies[index],
-                    ),
-                  );
-                },
+                ),
               ),
             ),
-            if (project.reportLink != null && project.reportLink!.isNotEmpty)
-              TextButton.icon(
-                onPressed: () {
-                  Get.toNamed(AppRoutes.VIEWPDF,
-                      arguments: project.reportLink!);
-                },
-                icon: const FaIcon(
-                  FontAwesomeIcons.filePdf,
-                ),
-                label: const Text('View Report'),
-              ),
             ListTile(
-              title: _customHeading('Screenshots'),
-              subtitle: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: project.imageLinks.length,
-                itemBuilder: (context, index) {
+              title: _customHeading('Technologies Used'),
+              subtitle: Obx(
+                () => ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: project.technologies.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      leading: _customIndex(
+                        index + 1,
+                      ),
+                      subtitle: _customBody(
+                        project.technologies[index],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            // if (project.reportLink != null && project.reportLink!.isNotEmpty)
+            //   TextButton.icon(
+            //     onPressed: () {
+            //       Get.toNamed(AppRoutes.VIEWPDF,
+            //           arguments: project.reportLink!);
+            //     },
+            //     icon: const FaIcon(
+            //       FontAwesomeIcons.filePdf,
+            //     ),
+            //     label: const Text('View Report'),
+            //   ),
+            Obx(
+              () {
+                if (!GetUtils.isNullOrBlank(project.reportLink.value)!) {
                   return ListTile(
-                    title: Image.network(
-                      project.imageLinks[index],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Text('Error Loading Image');
+                    title: _customHeading('Report'),
+                    subtitle: TextButton.icon(
+                      onPressed: () {
+                        Get.toNamed(AppRoutes.VIEWPDF,
+                            arguments: project.reportLink.value!);
                       },
+                      icon: const FaIcon(
+                        FontAwesomeIcons.filePdf,
+                      ),
+                      label: const Text('View Report'),
                     ),
                   );
-                },
+                } else {
+                  return ListTile(
+                    title: _customHeading('Report'),
+                    subtitle: _customBody('No Report Available'),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              title: _customHeading('Screenshots'),
+              subtitle: Obx(
+                () => project.imageLinks.isEmpty
+                    ? _customBody('No Screenshots Available')
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: project.imageLinks.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Image.network(
+                              project.imageLinks[index],
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Text('Error Loading Image');
+                              },
+                            ),
+                          );
+                        },
+                      ),
               ),
             )
           ],

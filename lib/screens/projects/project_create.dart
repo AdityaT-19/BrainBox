@@ -22,27 +22,51 @@ class ProjectCreate extends StatelessWidget {
 
   final _formUtils = FormUtils();
 
+  void addOnPressedTech() {
+    projectCreateFormController.projectTechnologies.add('');
+  }
+
+  void removeOnPressedTech() {
+    if (projectCreateFormController.projectTechnologies.length > 1) {
+      projectCreateFormController.projectTechnologies.removeLast();
+    }
+  }
+
+  void addOnPressedFeature() {
+    projectCreateFormController.projectFeatures.add('');
+  }
+
+  void removeOnPressedFeature() {
+    if (projectCreateFormController.projectFeatures.length > 1) {
+      projectCreateFormController.projectFeatures.removeLast();
+    }
+  }
+
   Widget growingTextFormField(
       {String? labelText,
       String? Function(String?)? validator,
-      void Function(String?)? onSaved,
+      void Function(String?, int)? onSaved,
       String? helperText}) {
-    void addOnPressed() {
-      labelText?.contains('Technology') ?? false
-          ? projectCreateFormController.projectTechLen.value++
-          : projectCreateFormController.projectFeatureLen.value++;
-    }
-
-    void removeOnPressed() {
-      if (labelText?.contains('Technology') ?? false
-          ? projectCreateFormController.projectTechLen.value > 1
-          : projectCreateFormController.projectFeatureLen.value > 1) {
-        labelText?.contains('Technology') ?? false
-            ? projectCreateFormController.projectTechLen.value--
-            : projectCreateFormController.projectFeatureLen.value--;
-      }
-    }
-
+    List<Widget> buttons = [
+      IconButton(
+        onPressed: labelText?.contains('Technology') ?? false
+            ? addOnPressedTech
+            : addOnPressedFeature,
+        icon: Icon(
+          Icons.add,
+          color: Get.theme.colorScheme.secondary,
+        ),
+      ),
+      IconButton(
+        onPressed: labelText?.contains('Technology') ?? false
+            ? removeOnPressedTech
+            : removeOnPressedFeature,
+        icon: Icon(
+          Icons.remove,
+          color: Get.theme.colorScheme.secondary,
+        ),
+      ),
+    ];
     return Row(
       children: [
         Obx(
@@ -50,13 +74,15 @@ class ProjectCreate extends StatelessWidget {
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: labelText?.contains('Technology') ?? false
-                  ? projectCreateFormController.projectTechLen.value
-                  : projectCreateFormController.projectFeatureLen.value,
+                  ? projectCreateFormController.projectTechnologies.length
+                  : projectCreateFormController.projectFeatures.length,
               itemBuilder: (context, index) {
                 return _formUtils.customTextFormField(
                   labelText: labelText,
                   validator: validator,
-                  onSaved: onSaved,
+                  onSaved: (p0) {
+                    onSaved!(p0, index);
+                  },
                   helperText: helperText,
                 );
               },
@@ -66,44 +92,14 @@ class ProjectCreate extends StatelessWidget {
         Obx(
           () {
             if (labelText?.contains('Technology') ?? false
-                ? projectCreateFormController.projectTechLen.value > 1
-                : projectCreateFormController.projectFeatureLen.value > 1) {
+                ? projectCreateFormController.projectTechnologies.length > 1
+                : projectCreateFormController.projectFeatures.length > 1) {
               return Column(
-                children: [
-                  IconButton(
-                    onPressed: addOnPressed,
-                    icon: Icon(
-                      Icons.add,
-                      color: Get.theme.colorScheme.secondary,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: removeOnPressed,
-                    icon: Icon(
-                      Icons.remove,
-                      color: Get.theme.colorScheme.secondary,
-                    ),
-                  ),
-                ],
+                children: buttons,
               );
             } else {
               return Row(
-                children: [
-                  IconButton(
-                    onPressed: addOnPressed,
-                    icon: Icon(
-                      Icons.add,
-                      color: Get.theme.colorScheme.secondary,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: removeOnPressed,
-                    icon: Icon(
-                      Icons.remove,
-                      color: Get.theme.colorScheme.secondary,
-                    ),
-                  ),
-                ],
+                children: buttons,
               );
             }
           },
@@ -313,24 +309,21 @@ class ProjectCreate extends StatelessWidget {
                               ],
                             ),
                           )
-                        : Container(
-                            height: Get.height * 0.2,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: projectCreateFormController
-                                  .projectImages.length,
-                              itemBuilder: (context, index) {
-                                return Padding(
-                                  padding: EdgeInsets.all(Get.height * 0.01),
-                                  child: Image.file(
-                                    File(projectCreateFormController
-                                        .projectImages[index].path),
-                                    height: Get.height * 0.2,
-                                    width: Get.width * 0.3,
-                                  ),
-                                );
-                              },
-                            ),
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: projectCreateFormController
+                                .projectImages.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: EdgeInsets.all(Get.height * 0.01),
+                                child: Image.file(
+                                  File(projectCreateFormController
+                                      .projectImages[index].path),
+                                  height: Get.height * 0.2,
+                                  width: Get.width * 0.3,
+                                ),
+                              );
+                            },
                           ),
                   ),
                 ),

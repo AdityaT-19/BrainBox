@@ -10,43 +10,42 @@ enum ProjectStatus {
 
 class Project {
   final String projectId;
-  final String name;
-  final String description;
-  final List<String> features;
-  final List<String> technologies;
-  final List<String> imageLinks;
-  final String? githubLink;
-  final String groupId;
-  final Rx<ProjectStatus> status;
-  final String? reportLink;
+  RxString name;
+  RxString description;
+  RxList<String> features;
+  RxList<String> technologies;
+  RxList<String> imageLinks;
+  RxnString githubLink;
+  RxString groupId;
+  Rx<ProjectStatus> status;
+  RxnString reportLink;
   Project({
     required this.name,
     required this.description,
     required this.features,
     required this.technologies,
     required this.imageLinks,
-    this.githubLink,
+    required this.githubLink,
     required this.groupId,
     required this.status,
     required this.projectId,
-    this.reportLink,
+    required this.reportLink,
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
     return Project(
-      projectId: json['pid'],
-      name: json['name'],
-      description: json['description'],
-      features: (json['features'] as List).map((e) => e as String).toList(),
+      projectId: json['pid'] as String,
+      name: (json['name'] as String).obs,
+      description: (json['description'] as String).obs,
+      features: (json['features'] as List).map((e) => e as String).toList().obs,
       technologies:
-          (json['technologies'] as List).map((e) => e as String).toList(),
-      imageLinks: (json['imageLinks'] as List).map((e) => e as String).toList(),
-      githubLink: json['githubLink'],
-      groupId: json['gid'],
-      status: Rx<ProjectStatus>(
-        ProjectStatus.values.byName(json['status'] ?? 'proposed'),
-      ),
-      reportLink: json['reportLink'],
+          (json['technologies'] as List).map((e) => e as String).toList().obs,
+      imageLinks:
+          (json['imageLinks'] as List).map((e) => e as String).toList().obs,
+      githubLink: RxnString(json['githubLink'] as String?),
+      groupId: (json['gid'] as String).obs,
+      status: ProjectStatus.values.byName(json['status'] ?? 'proposed').obs,
+      reportLink: RxnString(json['reportLink'] as String?),
     );
   }
 
