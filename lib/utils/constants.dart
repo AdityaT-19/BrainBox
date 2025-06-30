@@ -1,0 +1,3 @@
+const PROJECT_URL = 'https://qjaenniicvbaxoshppgo.supabase.co';
+const API_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqYWVubmlpY3ZiYXhvc2hwcGdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDY4ODUzMjQsImV4cCI6MjAyMjQ2MTMyNH0.Uvk4S8b5IedKm1Vq5pyBoM3oOMsGySl1nSFNTrrDOII';

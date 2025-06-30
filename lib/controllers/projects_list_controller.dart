@@ -79,7 +79,16 @@ class ProjectsListController extends GetxController {
                 .indexWhere((element) => element.projectId == projectId);
             projects.removeAt(index);
             final project = await fetchProject(projectId);
-            projects.insert(index, project);
+            if (_authController.user.value.gids
+                .map((element) => element.gid)
+                .toList()
+                .contains(project.groupId)) {
+              if (index == -1) {
+                projects.add(project);
+              } else {
+                projects.insert(index, project);
+              }
+            }
             isLoading(false);
           },
         )
